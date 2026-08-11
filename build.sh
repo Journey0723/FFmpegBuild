@@ -481,7 +481,7 @@ COMMON_FLAGS=(
     # cover H.264/HEVC-in-PS; these add MPEG-2 (DVD) and MPEG-4 Part 2.
     --enable-demuxer=mpegvideo --enable-demuxer=m4v
     --disable-decoders
-    --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=vp8
+    --enable-decoder=h264 --enable-decoder=h264_videotoolbox --enable-decoder=hevc --enable-decoder=hevc_videotoolbox --enable-decoder=vp8
     --enable-decoder=vp9 --enable-decoder=av1 --enable-decoder=libdav1d
     --enable-decoder=mpeg2video --enable-decoder=mpeg4 --enable-decoder=vc1
     --enable-decoder=qtrle
