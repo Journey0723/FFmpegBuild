@@ -19,7 +19,7 @@ ZIMG_VERSION="release-3.0.5"
 ZIMG_REPO="https://github.com/sekrit-twc/zimg.git"
 ZVBI_VERSION="v0.2.44"
 ZVBI_REPO="https://github.com/zapping-vbi/zvbi.git"
-SCRIPT_DIR="${0:a:h}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/build"
 OUTPUT_DIR="${SCRIPT_DIR}/Sources"
 FFMPEG_SRC="${BUILD_DIR}/ffmpeg-src"
@@ -482,12 +482,34 @@ COMMON_FLAGS=(
     --enable-demuxer=mpegvideo --enable-demuxer=m4v
     --disable-decoders
     --enable-decoder=h264 --enable-decoder=h264_videotoolbox --enable-decoder=hevc --enable-decoder=hevc_videotoolbox --enable-decoder=vp8
+    --enable-hwaccel=h264_videotoolbox --enable-hwaccel=hevc_videotoolbox
     --enable-decoder=vp9 --enable-decoder=av1 --enable-decoder=libdav1d
     --enable-decoder=mpeg2video --enable-decoder=mpeg4 --enable-decoder=vc1
+    # WMV3 (wmv9) — riff.c가 AV_CODEC_ID_WMV3로 매핑. vc1과 별개 디코더!
+    # wmv3 파일이 재생 안 되는 근본 원인 = 이 디코더 부재. LGPL-only.
+    --enable-decoder=wmv3 --enable-decoder=wmv3image
+    # RealVideo (RV30/RV40) — 표준 MKV에 간혹 포함되는 코덱. LGPL-only.
+    --enable-decoder=rv30 --enable-decoder=rv40
+    # 표준 MKV 비디오 코덱 보강 — 전부 FFmpeg 코어(LGPL-only), 심사 합당:
+    #   theora(VP3)  — MKV 스펙 명시, HandBrake 지원
+    #   ffv1         — MKV 스펙 명시, lossless (HandBrake 지원)
+    #   prores       — MKV 스펙 명시, mpv 기본 포함
+    #   mpeg1video   — MKV 스펙 명시 (MPEG-1 Part 2)
+    #   h263         — MKV 스펙 명시 (H.263)
+    #   vp5/vp6      — VLC가 On2 VP3/VP5/VP6 지원 (구형 MKV)
+    --enable-decoder=theora --enable-decoder=ffv1
+    --enable-decoder=prores --enable-decoder=mpeg1video
+    --enable-decoder=h263 --enable-decoder=vp5 --enable-decoder=vp6
     --enable-decoder=qtrle
     --enable-decoder=aac --enable-decoder=aac_latm --enable-decoder=ac3
     --enable-decoder=eac3 --enable-decoder=flac --enable-decoder=mp3
     --enable-decoder=mp3float --enable-decoder=opus --enable-decoder=vorbis
+    # WMA (Windows Media Audio) — wmv3 파일의 표준 오디오 페어링. floatp(FLTP) 출력.
+    # wmv3 영상은 나오는데 오디오가 안 나오는 근본 원인 = 이 디코더 부재. LGPL-only.
+    --enable-decoder=wmav2 --enable-decoder=wmalossless
+    # WMA Pro (Windows Media Audio 9 Professional) — wmv3 MKV의 실제 오디오 코덱 (codec_id=86053).
+    # floatp(FLTP) 출력. wmav2가 아니라 이게 빠져서 오디오 무출력이었음. LGPL-only.
+    --enable-decoder=wmapro
     --enable-decoder=truehd --enable-decoder=mlp --enable-decoder=dca --enable-decoder=alac
     --enable-decoder=pcm_s16le --enable-decoder=pcm_s24le --enable-decoder=pcm_f32le
     # Blu-ray LPCM (PCM_BLURAY): M2TS audio tracks that ship raw LPCM. Not
@@ -610,10 +632,13 @@ build_one() {
     cd "${WORK_DIR}"
 
     # Set pkg-config path so FFmpeg's configure can find dav1d
+    export PATH="/opt/homebrew/bin:$PATH"
     export PKG_CONFIG_PATH="${DAV1D_DIR}/lib/pkgconfig:${ZIMG_DIR}/lib/pkgconfig:${ZVBI_DIR}/lib/pkgconfig"
 
     "${FFMPEG_SRC}/configure" \
         --prefix="${INSTALL_DIR}" \
+        --pkg-config=pkg-config \
+        --enable-cross-compile \
         --enable-cross-compile \
         --target-os=darwin \
         --arch="${ARCH}" \
