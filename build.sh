@@ -421,7 +421,9 @@ COMMON_FLAGS=(
     --enable-swscale --disable-encoders --disable-muxers
     --disable-bsfs --disable-network --disable-protocols
     --disable-d3d11va --disable-dxva2 --disable-vaapi --disable-vdpau
-    --disable-gray --disable-iconv --disable-bzlib
+    # iconv ON — embedded SRT/ASS의 sub_charenc(EUC-KR, Shift-JIS 등 비UTF-8 자막)
+    # 변환에 필요 (decode.c iconv_open). macOS libc iconv는 시스템 라이브러리 → LGPL 문제없음.
+    --disable-gray --enable-iconv --disable-bzlib
     --disable-linux-perf --disable-symver --disable-swscale-alpha
     --enable-avcodec --enable-avformat --enable-avutil --enable-swresample
     --enable-libzimg
@@ -483,6 +485,9 @@ COMMON_FLAGS=(
     --disable-decoders
     --enable-decoder=h264 --enable-decoder=h264_videotoolbox --enable-decoder=hevc --enable-decoder=hevc_videotoolbox --enable-decoder=vp8
     --enable-hwaccel=h264_videotoolbox --enable-hwaccel=hevc_videotoolbox
+    # VP9/AV1 VideoToolbox hwaccel — Apple Silicon HW 유닛 사용 (M3+ AV1, 모든 Apple Silicon VP9).
+    # 미포함 시 dav1d/sw vp9 전용. LGPL: videotoolbox는 Apple 시스템 프레임워크 연동, 문제없음.
+    --enable-hwaccel=vp9_videotoolbox --enable-hwaccel=av1_videotoolbox
     --enable-decoder=vp9 --enable-decoder=av1 --enable-decoder=libdav1d
     --enable-decoder=mpeg2video --enable-decoder=mpeg4 --enable-decoder=vc1
     # WMV3 (wmv9) — riff.c가 AV_CODEC_ID_WMV3로 매핑. vc1과 별개 디코더!
@@ -506,11 +511,14 @@ COMMON_FLAGS=(
     --enable-decoder=mp3float --enable-decoder=opus --enable-decoder=vorbis
     # WMA (Windows Media Audio) — wmv3 파일의 표준 오디오 페어링. floatp(FLTP) 출력.
     # wmv3 영상은 나오는데 오디오가 안 나오는 근본 원인 = 이 디코더 부재. LGPL-only.
-    --enable-decoder=wmav2 --enable-decoder=wmalossless
+    # WMAv1 — 극구형 ASF(ASX 시절) 오디오. wma v1 파일의 표준 오디오. LGPL-only.
+    --enable-decoder=wmav1 --enable-decoder=wmav2 --enable-decoder=wmalossless
     # WMA Pro (Windows Media Audio 9 Professional) — wmv3 MKV의 실제 오디오 코덱 (codec_id=86053).
     # floatp(FLTP) 출력. wmav2가 아니라 이게 빠져서 오디오 무출력이었음. LGPL-only.
     --enable-decoder=wmapro
     --enable-decoder=truehd --enable-decoder=mlp --enable-decoder=dca --enable-decoder=alac
+    # BE PCM — AIFF/DVD-Video 원본 오디오가 big-endian. LE만 있으면 무음. LGPL-only.
+    --enable-decoder=pcm_s16be --enable-decoder=pcm_s24be
     --enable-decoder=pcm_s16le --enable-decoder=pcm_s24le --enable-decoder=pcm_f32le
     # Blu-ray LPCM (PCM_BLURAY): M2TS audio tracks that ship raw LPCM. Not
     # legal in fMP4, so AetherEngine's AudioBridge decodes to PCM and
