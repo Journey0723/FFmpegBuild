@@ -82,8 +82,9 @@ Then import the modules you need: `Libavformat`, `Libavcodec`, `Libavutil`, `Lib
 ## Decoder support
 
 - **Video (hardware via VideoToolbox)**: H.264, HEVC up to Main10 (HDR10 / DV Profile 8)
-- **Video (software)**: AV1 (dav1d), VP9, VP8, MPEG-2, MPEG-4, VC-1, QuickTime RLE (qtrle)
-- **Audio**: AAC, AC3, EAC3 (incl. JOC detection for Atmos), FLAC, MP2, MP3, Opus, Vorbis, TrueHD, MLP, DTS, ALAC, PCM (incl. Blu-ray LPCM via `pcm_bluray`)
+- **Video (software)**: AV1 (dav1d), VP9, VP8, MPEG-2, MPEG-1, MPEG-4, VC-1, WMV3/VC-1 image, WMV1/WMV2, H.263, On2 VP5/VP6, Theora (VP3), FFV1, ProRes, Motion JPEG, Sorenson Spark (FLV1), QuickTime RLE (qtrle), RealVideo (RV8/RV9/RV10)
+- **Audio**: AAC, AC3, EAC3 (incl. JOC detection for Atmos), FLAC, MP2, MP3, Opus, Vorbis, TrueHD, MLP, DTS, ALAC, PCM (incl. Blu-ray LPCM via `pcm_bluray`), WMA (v1/v2/Pro/Lossless/Voice), RealAudio (Cook/SIPR/RALF-style RA 144/288), ATRAC3/ATRAC3+, WavPack, APE, TTA, Shorten, Musepack 7/8, GSM
+- **Containers**: plus ASF (`.asf`/`.wmv`), RealMedia (`.rm`/`.rmvb`), raw Opus (`.opus`)
 - **Subtitles**: SRT, ASS, SSA, WebVTT, PGS, DVB subtitle, DVB teletext (via libzvbi), DVD
 
 HDR metadata (BT.2020, SMPTE ST 2084 / PQ, HLG, DV RPU) is preserved end-to-end so the decode pipeline can tag frames correctly.

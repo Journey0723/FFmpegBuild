@@ -11,7 +11,7 @@
 #
 set -eo pipefail  # pipefail so `... | tail -N` doesn't swallow configure/make errors
 
-FFMPEG_VERSION="n8.1.2"
+FFMPEG_VERSION="n8.1.3"
 FFMPEG_REPO="https://github.com/FFmpeg/FFmpeg.git"
 DAV1D_VERSION="1.5.1"
 DAV1D_REPO="https://code.videolan.org/videolan/dav1d.git"
@@ -429,7 +429,7 @@ COMMON_FLAGS=(
     --enable-libzimg
     --enable-libzvbi
     --disable-filters
-    --enable-filter=buffer --enable-filter=buffersink
+    # buffer/buffersink 계열 4종(asrc/vsrc/asink/vsink)은 configure filter_list 고정 포함 — 옵션 불필.
     --enable-filter=format --enable-filter=scale
     --enable-filter=zscale --enable-filter=tonemap
     --enable-filter=colorspace
@@ -482,8 +482,13 @@ COMMON_FLAGS=(
     # playback shows audio only. The h264/hevc raw demuxers above already
     # cover H.264/HEVC-in-PS; these add MPEG-2 (DVD) and MPEG-4 Part 2.
     --enable-demuxer=mpegvideo --enable-demuxer=m4v
+    # ASF (.asf/.wmv) — 앱 화이트리스트에 있으나 demuxer 부재로 open_input 실패하던 포맷. LGPL-only.
+    --enable-demuxer=asf
+    # Raw Opus(.opus)는 ogg demuxer가 담당 — 별도 opus demuxer는 FFmpeg에 존재하지 않는다.
+    # RealMedia (.rm/.rmvb) — rm demuxer + RV4/RV8 오디오 코덱. 전부 LGPL-only(헤더 실측).
+    --enable-demuxer=rm
     --disable-decoders
-    --enable-decoder=h264 --enable-decoder=h264_videotoolbox --enable-decoder=hevc --enable-decoder=hevc_videotoolbox --enable-decoder=vp8
+    --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=vp8
     --enable-hwaccel=h264_videotoolbox --enable-hwaccel=hevc_videotoolbox
     # VP9/AV1 VideoToolbox hwaccel — Apple Silicon HW 유닛 사용 (M3+ AV1, 모든 Apple Silicon VP9).
     # 미포함 시 dav1d/sw vp9 전용. LGPL: videotoolbox는 Apple 시스템 프레임워크 연동, 문제없음.
@@ -495,6 +500,13 @@ COMMON_FLAGS=(
     --enable-decoder=wmv3 --enable-decoder=wmv3image
     # RealVideo (RV30/RV40) — 표준 MKV에 간혹 포함되는 코덱. LGPL-only.
     --enable-decoder=rv30 --enable-decoder=rv40
+    # RealVideo RV6/RV8 + RealAudio 전 계열 — .rm/.rmvb 재생에 필수 (rmdec가 요구하는 코덱 전체). LGPL-only(헤더 실측).
+    --enable-decoder=rv10 --enable-decoder=rv20
+    --enable-decoder=cook --enable-decoder=sipr --enable-decoder=ra_144 --enable-decoder=ra_288
+    --enable-decoder=wmavoice --enable-decoder=atrac3 --enable-decoder=atrac3al
+    --enable-decoder=atrac3p --enable-decoder=atrac3pal
+    # WMV1/WMV2 — 구형 .wmv/.asf 영상 (wmv3와 별개 디코더). LGPL-only.
+    --enable-decoder=wmv1 --enable-decoder=wmv2
     # 표준 MKV 비디오 코덱 보강 — 전부 FFmpeg 코어(LGPL-only), 심사 합당:
     #   theora(VP3)  — MKV 스펙 명시, HandBrake 지원
     #   ffv1         — MKV 스펙 명시, lossless (HandBrake 지원)
@@ -506,6 +518,15 @@ COMMON_FLAGS=(
     --enable-decoder=prores --enable-decoder=mpeg1video
     --enable-decoder=h263 --enable-decoder=vp5 --enable-decoder=vp6
     --enable-decoder=qtrle
+    # 구형 FLV 영상(Sorenson Spark) — flv demuxer는 있었으나 디코더 부재로 화면만 검었던 경로. LGPL-only.
+    --enable-decoder=flv
+    # Motion JPEG — AVI/MOV/MP4에 흔한 인tra 코덱 + mjpeg parser(TS 내 프레임 프레이밍). LGPL-only.
+    --enable-decoder=mjpeg --enable-parser=mjpeg
+    # 무손실/준무손실 오디오 계열 — 손실 압축 파일군 보완. 전부 LGPL-only.
+    --enable-decoder=ape --enable-decoder=wavpack --enable-decoder=tta --enable-decoder=shorten
+    --enable-decoder=mpc7 --enable-decoder=mpc8
+    # GSM — 3GP/구형 AVI 오디오. LGPL-only.
+    --enable-decoder=gsm_ms
     --enable-decoder=aac --enable-decoder=aac_latm --enable-decoder=ac3
     --enable-decoder=eac3 --enable-decoder=flac --enable-decoder=mp3
     --enable-decoder=mp3float --enable-decoder=opus --enable-decoder=vorbis
